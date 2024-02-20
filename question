@@ -1,0 +1,91 @@
+package Snakes_Ladders;
+import javax.swing.*;
+import java.awt.*;
+import java.sql.*;
+
+public class Question extends JFrame {
+
+    private static final String DRIVER   = "com.mysql.cj.jdbc.Driver";
+    private static final String URL      = "jdbc:mysql://localhost:3306/gamesl";
+    private static final String USERNAME = "root";
+    private static final String PASSWORD = "";
+    private Connection connection;
+
+    public Question() {
+        setTitle("HALT");
+        setSize(750, 600);
+        setLayout(new FlowLayout());
+        setLocation(960, 310);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        try {
+            startConnection();
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void startConnection() throws SQLException, ClassNotFoundException {
+    	try {
+            
+            Class.forName(DRIVER);
+            
+            connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+            throw e; // Rethrow the exception to handle it appropriately
+        }
+    }
+
+    public String getQuestion(int questionNumber) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("SELECT Question FROM questions WHERE QID=?")) {
+            ps.setInt(1, questionNumber);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("Question");
+                }
+            }
+        }
+        return null;
+    }
+
+	public String getOption(int questionNumber, int optionNumber) throws SQLException {
+	    try (PreparedStatement ps = connection.prepareStatement("SELECT Opt FROM options WHERE QID=? AND OID=?")) {
+	        ps.setInt(1, questionNumber);
+	        ps.setInt(2, optionNumber);
+	        try (ResultSet rs = ps.executeQuery()) {
+	            if (rs.next()) {
+	                return rs.getString("Opt");
+	            }
+	        }
+	    }
+	    return null;
+	}
+
+	public int getAnswer(int questionNumber) throws SQLException {
+	    try (PreparedStatement ps = connection.prepareStatement("SELECT OID FROM answers WHERE QID=?")) {
+	        ps.setInt(1, questionNumber);
+	        try (ResultSet rs = ps.executeQuery()) {
+	            if (rs.next()) {
+	                return rs.getInt("OID");
+	            }
+	        }
+	    }
+	    return -1;
+	}
+
+
+    public void endConnection() {
+        if (connection != null) {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void hideFrame() {
+		setVisible(false);
+    }
+}
